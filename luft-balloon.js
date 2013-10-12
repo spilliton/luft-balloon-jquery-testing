@@ -11,10 +11,10 @@
 //   $('.js_get_remote_overlay:first').click();
 //   t.after('album was clicked', 2000, function(){
 //     modal_close = $('.modalCloseImg');
-//     t.assert_exists(modal_close, 'modal close');
+//     t.assert_exists(modal_close, "modal close button");
 //     modal_close.click();
 //     t.after('modal X clicked', 500, function(){
-//       t.assert(!modal_close.is(":visible"), "modal not re-closed");
+//       t.assert_hidden(modal_close, "modal close button");
 //       t.complete();
 //     });
 //   });
