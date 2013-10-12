@@ -1,4 +1,4 @@
-// Luft Balloon jQuery site testing v1.1
+// Luft Balloon jQuery site testing v0.1
 // License: MIT License(http://opensource.org/licenses/mit-license.php)
 // Copyright 2013 Zachary Kloepping http://twitter.com/spilliton
 // Inspired by Helium CSS (https://github.com/geuis/helium-css)
