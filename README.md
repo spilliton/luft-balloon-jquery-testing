@@ -2,7 +2,7 @@
 [mrshow]: http://www.youtube.com/watch?v=c6BvdpR6V3g
 [You've got to follow your balloon!][mrshow]
 
-Luft Balloon allows you to write tests that get run directly in your browser.
+Luft Balloon allows you to write tests that run directly in your browser.
 
 ## Setup
 
@@ -72,9 +72,10 @@ luft.test("/", 'subscribe and unsubscribe', 3000, function(t){
 ## What Luft Balloon Does
 
 * Allows you to perform operations on the DOM from a running web browser.
-* Can't perform tests on multiple pages.
-* Reports directly in the browser on success/failure of tests.
+* Runs one test per page at a time, collecting results in HTML5 local storage as it goes.
 * Provides a suite of common assertions to use.
+* Allows for multiple assertions and actions to be performed in a given test.
+* Reports directly in the browser on success/failure of tests.
 
 ## What It Does Not Do
 
