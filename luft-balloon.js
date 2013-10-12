@@ -7,7 +7,7 @@
 // # Example usage
 // <script type="text/javascript" src="path/to/luft-balloon.js"></script>
 // # After luft-balloon is included
-// luft.test("/", 'product overlay open and close', 3000, function(t){
+// test("/", 'product overlay open and close', 3000, function(t){
 //   $('.js_get_remote_overlay:first').click();
 //   t.after('album was clicked', 2000, function(){
 //     modal_close = $('.modalCloseImg');
@@ -21,78 +21,145 @@
 // });
 //
 // $(document).ready(function(){
-//   luft.init();
+//   init();
 // });
 
-var luft = {
+var luft = (function($, document) {
 
-  callback: undefined,
-  errorLogged: false,
-  advancing: false,
+  // Local Variables =======================================
 
-  // Loaded every pageload before init()
-  //allTests: [{ path: "/",  name: '', func}]
-  allTests: [],
+  var callback = undefined;
+  var errorLogged = false;
+  var advancing = false;
+  var textContexts = [];
+  var totalAssertCount = 0;
+  var passedAssertCount = 0;
+  var currentTestCompleted = false;
+  var currentTestError = null;
 
-  data: {
+  // allTests gets populated by calls to test
+  var allTests = [];
+  // data gets serialized into local storage
+  var data = {
     //status,
     //currentTestIndex,
     //errors,
     //totalAssertCount,
     //passedAssertCount
-  },
+  };
 
-  init: function(){
+  // Public Methods =======================================
+
+  var init = function(){
     // Callback on init or default to running the report.
-    luft.callback = (arguments.length > 0) ? arguments[0] : luft.report;
-
+    callback = (arguments.length > 0) ? arguments[0] : report;
     //silently fail if localStorage is not available
     if( window.localStorage ){
       //load page data
-      luft.load();
-      luft.save();
-      luft.checkstatus();
+      load();
+      save();
+      checkstatus();
     }else{
       throw new Error('localStorage API not found');
     }
-  },
+  };
 
-  checkstatus: function(){
+  // registers a test
+  var test = function(path, test_name, timeout, func){
+    allTests.push({'path': path, 'name': test_name, 'func': func, 'timeout': timeout});
+  };
+
+  var reset = function(){
+    //resets to beginning
+    localStorage.removeItem('luftData');
+    $('#luftID').remove();
+    clear();
+    init();
+  };
+
+  // Public assertion methods ===================================
+
+  // Since only one test is run per page load this context
+  // is also used once per page load
+  var helpers = {
+    after: function(text, timeout, func){
+      if(currentTestError){throw currentTestError;}
+      textContexts.push(text);
+      if(typeof func === 'function'){
+        setTimeout(function(){
+          try{
+            func();
+          }catch(err){
+            currentTestError = err;
+          }
+        }
+        ,timeout);
+      }else{
+        throw "after() expects function as second param";
+      }
+    },
+    assert: function(val, fail_msg){
+      if(currentTestError){throw currentTestError;}
+      totalAssertCount += 1;
+      if(val){
+        passedAssertCount += 1;
+      }else{
+        throw fail_msg;
+      }
+    },
+    assert_exists: function(elem, elem_name){
+      helpers.assert(($(elem).length > 0), elem_name+' did not exist on page!');
+    },
+    assert_visible: function(elem, elem_name){
+      helpers.assert($(elem).is(":visible"), elem_name+' was not visible!');
+    },
+    assert_hidden: function(elem, elem_name){
+      helpers.assert(!$(elem).is(":visible"), elem_name+' was not hidden!');
+    },
+    assert_equal: function(expected, actual){
+      helpers.assert((expected === actual), 'expected "'+expected+'" but was "'+actual+'"');
+    },
+    complete: function(){
+      currentTestCompleted = true;
+    }
+  };
+
+
+  // Private methods =======================================
+
+  var checkstatus = function(){
     //determine state
     //0: not started
     //1: looping through pages, running tests
     //2: finished, show report
-
-    if(typeof luft.data.status === 'undefined'){
-      luft.data.status = 0;
+    if(typeof data.status === 'undefined'){
+      data.status = 0;
     }
-
-    if( luft.data.status === 0 ){
-      luft.renderStart();
+    // render 
+    if( data.status === 0 ){
+      renderStart();
       return false;
     }
-      
-    if( luft.data.status === 1 ){
-      luft.runTests();
+    // loop through pages running tests
+    if( data.status === 1 ){
+      runTests();
       return false;
     }
-    
-    if( luft.data.status === 2 ){
-      //Finished, issue report
-      luft.callback();
+    //Finished, issue report
+    if( data.status === 2 ){
+      callback();
     }
-
-  },
+  };
   
-  renderStart: function(){
-    var total = luft.allTests.length.toString();
+  var renderStart = function(){
+    var total = allTests.length.toString();
     var html = [
         '<h1>Run '+total+' Luft Tests</h1>',
         '<input type="button" id="testStart" value="Start"/>',
         '<input type="button" id="testHide" value="Hide"/>'
     ];
 
-    luft.generateCSS();
+    generateCSS();
 
     var div = document.createElement('div');
         div.id = 'luftID';
@@ -102,43 +169,43 @@ var luft = {
     $('body')[0].appendChild(div);
 
     //add listener to save list and start processing
-    $('#testStart').on('click', luft.startTests);
-    $('#testHide').on('click', luft.hide);
-  },
+    $('#testStart').on('click', startTests);
+    $('#testHide').on('click', hide);
+  };
 
-  restart: function(){
-    luft.reset();
-    luft.startTests();
-  },
+  var restart = function(){
+    reset();
+    startTests();
+  };
 
-  startTests: function(){
-    luft.data.status = 1;
-    luft.data.currentTestIndex = 0;
-    luft.data.totalAssertCount = 0;
-    luft.data.passedAssertCount = 0;
-    luft.data.errors = [];
-    luft.save();
-    luft.nav();
-  },
+  var startTests = function(){
+    data.status = 1;
+    data.currentTestIndex = 0;
+    data.totalAssertCount = 0;
+    data.passedAssertCount = 0;
+    data.errors = [];
+    save();
+    nav();
+  };
 
-  hide: function(){
+  var hide = function(){
     $('#luftID').hide();
-  },
+  };
 
   //display final report
-  report: function(){
+  var report = function(){
     var html = [
       '<h1>Tests Complete!</h1>',
       '<input type="button" id="luftRestart" value="Reset Tests"/>',
       '<input type="button" id="testHide" value="Hide"/>'
     ];
 
-    luft.generateCSS();
+    generateCSS();
 
-    var passed = luft.data.passedAssertCount.toString();
-    var total = luft.data.totalAssertCount.toString();
+    var passed = data.passedAssertCount.toString();
+    var total = data.totalAssertCount.toString();
     html.push('<h2>'+"Passed "+passed+' out of '+total+" assertions."+'</h2>');
-    luft.pushErrorsTo(html);
+    pushErrorsTo(html);
 
     var div = document.createElement('div');
         div.id = 'luftID';
@@ -148,34 +215,33 @@ var luft = {
     $('body')[0].appendChild(div);
 
     //add listener to reset all data
-    $('#luftRestart').on('click', luft.restart);
-    $('#testHide').on('click', luft.hide);
-  },
+    $('#luftRestart').on('click', restart);
+    $('#testHide').on('click', hide);
+  };
 
-  pushErrorsTo: function(html){
-    if(luft.data.errors.length == 0){return true;}
+  var pushErrorsTo = function(html){
+    if(data.errors.length == 0){return true;}
     html.push('<ul class="cell">');
-    for(var i=0;i<luft.data.errors.length;i++){
+    for(var i=0;i<data.errors.length;i++){
       var classname = '';
       if(i%2==0){
         classname = ' class="alternate"';
       }
-      var str = luft.errorToString(luft.data.errors[i]);
+      var str = errorToString(data.errors[i]);
       html.push('<li'+classname+'>'+str+'</li>')
     }
     html.push('</ul>'); 
-  },
+  };
 
-  errorToString: function(error){
+  var errorToString = function(error){
     var test = "Test: "+error.test_name+' on page '+error.path;
     var contexts = "After: "+error.contexts.join(' -> ');
     var failure = "Failed: "+error.msg;
     var msg = [test, contexts, failure].join('<br/>');
     return msg;
-  },
+  };
 
-  generateCSS: function(){
-
+  var generateCSS = function(){
     var css = [
       '#luftID{',
         'font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;',
@@ -278,129 +344,99 @@ var luft = {
     style.innerHTML = css.join('');
 
     $('body')[0].appendChild( style );
-  },
-
-  reset: function(){
-    //resets to beginning
-    localStorage.removeItem('luftData');
-    $('#luftID').remove();
-    luft.clear();
-    luft.init();
-  },
+  };
 
   // run relevant tests on the page
   // page already loaded at this point
-  runTests: function(){
-    var test = luft.currentTest();
+  var runTests = function(){
+    var test = currentTest();
     var error = {
       path: test.path,
       test_name: test.name
     };
 
     try{
-      test.func(luftTestContext);
+      test.func(helpers);
     }catch(err){
       error.msg = err;
-      error.contexts = luftTestContext.textContexts;
-      luft.addError(error);
-      luft.advanceTests();
+      error.contexts = textContexts;
+      addError(error);
+      advanceTests();
     }
 
     // if no initial errors, test eventually times out
     setTimeout(function(){
-      error.contexts = luftTestContext.textContexts
-      if(luftTestContext.errorMsg){
-        error.msg = luftTestContext.errorMsg;
-        luft.addError(error);
-      }else if(!luftTestContext.completed){
+      error.contexts = textContexts;
+      if(currentTestError){
+        error.msg = currentTestError;
+        addError(error);
+      }else if(!currentTestCompleted){
         error.msg = "Did not complete in time!";
-        luft.addError(error);
+        addError(error);
       }
-      luft.advanceTests();
+      advanceTests();
     }, test.timeout); 
 
-  },
+  };
 
-  currentTest: function(){
-    var i = luft.data.currentTestIndex;
-    return luft.allTests[i];
-  },
+  var currentTest = function(){
+    var i = data.currentTestIndex;
+    return allTests[i];
+  };
 
   // Returns true if there is a valid next test
-  advanceTests: function(){
-    if(!luft.advancing){
-      luft.advancing = true;
-      luft.data.totalAssertCount += luftTestContext.assertCount;
-      luft.data.passedAssertCount += luftTestContext.passedAssertCount;
-      luft.data.currentTestIndex += 1;
-      luft.save();    
-      var should_advance = luft.data.currentTestIndex < luft.allTests.length;
+  var advanceTests = function(){
+    if(!advancing){
+      advancing = true;
+      data.totalAssertCount += totalAssertCount;
+      data.passedAssertCount += passedAssertCount;
+      data.currentTestIndex += 1;
+      save();    
+      var should_advance = data.currentTestIndex < allTests.length;
       if(should_advance){
-        luft.nav();
+        nav();
       }else{
-        luft.data.status = 2;
-        luft.save();
-        luft.callback();
+        data.status = 2;
+        save();
+        callback();
       }
     }
-  },
+  };
 
   //navigate to next page in list
-  nav: function(){
-    var path = luft.currentTest().path;
+  var nav = function(){
+    var path = currentTest().path;
     window.location = path;
-  },
+  };
 
-  // registers a test
-  test: function(path, test_name, timeout, func){
-    luft.allTests.push({'path': path, 'name': test_name, 'func': func, 'timeout': timeout});
-  },
+
   
-  addError: function(msg){
-    if(!luft.errorLogged){
-      luft.errorLogged = true;
-      luft.data.errors.push(msg);
-      luft.save();
+  var addError = function(msg){
+    if(!errorLogged){
+      errorLogged = true;
+      data.errors.push(msg);
+      save();
     }
-  },
-
-  // thanks stack overflow
-  arrayUnique: function(a) {
-    return a.reduce(function(p, c) {
-        if (p.indexOf(c) < 0) p.push(c);
-        return p;
-    }, []);
-  },
+  };
 
 
-  // on: function(target, ev, fn){
-  //     //only add events to the first element in the target/querySelectorAll nodeList.
-  //     //don't need to add in support for multiple targets
-  //     target = target[0] || target;
-  //     target.addEventListener(ev, fn, false);
-  // },
-
-
-  load: function(){
+  var load = function(){
     if(!localStorage.luftData){
       localStorage.luftData = JSON.stringify({});
     }
-    luft.data = JSON.parse( localStorage.luftData );
-  },
+    data = JSON.parse( localStorage.luftData );
+  };
 
 
-  save: function(){
-    localStorage.luftData = JSON.stringify( luft.data );
-  },
+  var save = function(){
+    localStorage.luftData = JSON.stringify( data );
+  };
 
-
-  // when something goes wrong, nice to luft.clear() to nuke the local storage
-  clear: function() {
+  var clear = function() {
     delete localStorage['luftData'];
-  },
+  };
 
-
-  get: function(url, index, callback){
+  var get = function(url, index, callback){
     if(window.attachEvent){
       var http = new ActiveXObject("Microsoft.XMLHTTP");
     }else{
@@ -413,55 +449,13 @@ var luft = {
       }
     }
     http.send(null);
-  }
-};
+  };
 
-// Since only one test is run per page load this context
-// is also used once per page load
-var luftTestContext = {
-  errorMsg: null,
-  textContexts: [],
-  assertCount: 0,
-  passedAssertCount: 0,
-  completed: false,
-  after: function(text, timeout, func){
-    if(luftTestContext.errorMsg){throw luftTestContext.errorMsg;}
-    luftTestContext.textContexts.push(text);
-    if(typeof func === 'function'){
-      setTimeout(function(){
-        try{
-          func();
-        }catch(err){
-          luftTestContext.errorMsg = err;
-        }
-      }
-      ,timeout);
-    }else{
-      throw "after() expects function as second param";
-    }
-  },
-  assert: function(val, fail_msg){
-    if(luftTestContext.errorMsg){throw luftTestContext.errorMsg;}
-    luftTestContext.assertCount += 1;
-    if(val){
-      luftTestContext.passedAssertCount += 1;
-    }else{
-      throw fail_msg;
-    }
-  },
-  assert_exists: function(elem, elem_name){
-    luftTestContext.assert(($(elem).length > 0), elem_name+' did not exist on page!');
-  },
-  assert_visible: function(elem, elem_name){
-    luftTestContext.assert($(elem).is(":visible"), elem_name+' was not visible!');
-  },
-  assert_hidden: function(elem, elem_name){
-    luftTestContext.assert(!$(elem).is(":visible"), elem_name+' was not hidden!');
-  },
-  assert_equal: function(expected, actual){
-    luftTestContext.assert((expected === actual), 'expected "'+expected+'" but was "'+actual+'"');
-  },
-  complete: function(){
-    luftTestContext.completed = true;
-  }
-};
+  return {
+    init: init,
+    test: test,
+    reset: reset, 
+    helpers: helpers
+  };
+
+})(jQuery, document);
