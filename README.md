@@ -49,7 +49,7 @@ The above example will navigate the browser to '/artists'.  Then once the page l
 
 ### Trigger actions and wait with t.after()
 
-To ensure that event handlers have been setup properly by your javascript, you often need to trigger some action and then make an assertion after the event code has occurred.  To do this, you may nest t.after callbacks inside of your tests.
+To ensure that event handlers have been setup properly by your javascript, you often need to trigger some action, then make an assertion after the event code has occurred.  To do this, you may nest t.after() callbacks inside of your tests.
 
 ``` javascript
 luft.test("/products", 'ajax load more button', 2000, function(t){
@@ -64,11 +64,16 @@ luft.test("/products", 'ajax load more button', 2000, function(t){
 });
 ```
 
-In this example, we first perform a few asserts to ensure the link we want to click actualy exists before we click it, then after triggering the click event, we need to wait for some time (1s in this case) for the ajax events to fire and load more products into the page before we can perform additional assertions.
+In this example, we first perform a few asserts to ensure the link we want to click actualy exists, then after triggering the click event, we need to wait for some time (1s in this case) for the ajax events to fire and load more products into the page before we can perform additional assertions.
 
-The non-url related strings passed to test(), after(), and the assert() methods are used when printing out test and assertion failures so that you can have some context as to what went wrong and where.
+### Be Careful With Timeouts And Waits
 
 Since the timeout passed to test() specifies the max time it should take for the test to complete, you never want your total after() wait times to exceed your max.  This is a recipe for a broken test!
+
+### Strings For Context
+
+The non-url related strings passed to test(), after(), and the assert() methods are used when printing out test and assertion failures to report what went wrong and where.
+
 
 ## More Examples
 
