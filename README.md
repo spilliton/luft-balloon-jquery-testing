@@ -12,7 +12,7 @@ To run tests, you will need to put a script referrence to luft-balloon.js at the
 <script type="text/javascript" src="path/to/luft-balloon.js"></script>
 ```
 
-Followed by javascript that contains your tests.
+Followed by javascript that contains your test definitions.
 
 ``` javascript
 luft.test("/", 'product overlay open and close', 3000, function(t){
@@ -34,9 +34,9 @@ Javascript by nature is very asynchronous.  This presents some issues when immed
 
 ### Define a test with luft.test()
 
-This is used to define the scope of a single test.  You define the relative path for the browser to navigate to, give the test a meaningful name, specify the maximum time it should take to complete, and provide a function the contains the test logic.
+This is used to define the scope of a single test.  You define the relative path for the browser to navigate to, give the test a meaningful name, specify the maximum time it should take to complete, and provide a function that contains the test logic.
 
-The function you provide is passed a param that gives you access to the various assertions and helper methods.  The most basic test definition could simply assert a condition.
+A simple test definition could simply assert a condition on a loaded page.
 
 ``` javascript
 luft.test("/artists", 'renders 20 artists', 1000, function(t){
@@ -45,7 +45,7 @@ luft.test("/artists", 'renders 20 artists', 1000, function(t){
 });
 ```
 
-The above example will navigate the browser to '/artists'.  Then once the page load event fires, give the test 1 second (1000ms) to complete.  If the encapsulated logic takes longer than 1s to call t.complete(), it will fail.  If the assert statement fails, this will also cause a failing state to be reported for the test.
+The above example will navigate the browser to '/artists'.  Then once the page load event fires, assert that there are 20 .artist elements on the page.  If the encapsulated logic takes longer than 1000ms (1 second) before calling t.complete(), the test will fail.  If the assert statement fails, this will also cause a failing state to be reported.
 
 ### Trigger actions and wait with t.after()
 
