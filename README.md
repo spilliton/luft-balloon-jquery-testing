@@ -28,7 +28,49 @@ $(document).ready(function(){
 });
 ```
 
-## Examples
+## Basics
+
+Javascript by nature is very asynchronous.  This presents some issues when immediately trying to assert some state after you have performed an action.  Luft Balloon's solution for this is to allow each test to specify timeouts for how long it should wait before performing subsequent steps in a test.
+
+### Define a test with luft.test()
+
+This is used to define the scope of a single test.  You define the relative path for the browser to navigate to, give the test a meaningful name, specify the maximum time it should take to complete, and provide a function the contains the test logic.
+
+The function you provide is passed a param that gives you access to the various assertions and helper methods.  The most basic test definition could simply assert a condition.
+
+``` javascript
+luft.test("/artists", 'renders 20 artists', 1000, function(t){
+  t.assert_equal(20, $('.artist').length);
+  t.complete();
+});
+```
+
+The above example will navigate the browser to '/artists'.  Then once the page load event fires, give the test 1 second (1000ms) to complete.  If the encapsulated logic takes longer than 1s to call t.complete(), it will fail.  If the assert statement fails, this will also cause a failing state to be reported for the test.
+
+### Trigger actions and wait with t.after()
+
+To ensure that event handlers have been setup properly by your javascript, you often need to trigger some action and then make an assertion after the event code has occurred.  To do this, you may nest t.after callbacks inside of your tests.
+
+``` javascript
+luft.test("/products", 'ajax load more button', 2000, function(t){
+  var link = $('.more:first');
+  t.assert_exists(link, 'more link');
+  t.assert_equal(10, $('.products').length);
+  link.click(); // will not be called if prior asserts fail
+  t.after('more link clicked', 1000, function(){
+    t.assert_equal(20, $('.products').length);
+    t.complete();
+  });
+});
+```
+
+In this example, we first perform a few asserts to ensure the link we want to click actualy exists before we click it, then after triggering the click event, we need to wait for some time (1s in this case) for the ajax events to fire and load more products into the page before we can perform additional assertions.
+
+The non-url related strings passed to test(), after(), and the assert() methods are used when printing out test and assertion failures so that you can have some context as to what went wrong and where.
+
+Since the timeout passed to test() specifies the max time it should take for the test to complete, you never want your total after() wait times to exceed your max.  This is a recipe for a broken test!
+
+## More Examples
 
 ``` javascript
 luft.test("/", 'product overlay open and close', 3000, function(t){
