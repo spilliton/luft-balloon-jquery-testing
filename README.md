@@ -72,10 +72,13 @@ Since the timeout passed to test() specifies the max time it should take for the
 
 ### Strings For Context
 
-The non-url related strings passed to test(), after(), and the assert() methods are used when printing out test and assertion failures to report what went wrong and where.
+The strings passed to test(), after(), and the assert() methods (other than the URL) are used when printing out test and assertion failures so you know what went wrong and where.
 
+## More Complex Examples
 
-## More Examples
+You can define as many tests as you want to build a test suite.  Luft Balloon will iterate over each page and then display a final report once all the tests have been performed.
+
+Here is a small test suite:
 
 ``` javascript
 luft.test("/", 'product overlay open and close', 3000, function(t){
@@ -92,7 +95,7 @@ luft.test("/", 'product overlay open and close', 3000, function(t){
 });
 
 
-luft.test("/", 'subscribe and unsubscribe', 3000, function(t){
+luft.test("/artists", 'subscribe and unsubscribe', 3000, function(t){
   var link = null;
   $('.subscribe_link').each(function(i,elem){
     if($(elem).text()=='Subscribe'){
@@ -115,8 +118,9 @@ luft.test("/", 'subscribe and unsubscribe', 3000, function(t){
 });
 ```
 
+As you can see, you can next as many calls to t.after() as you need, just be careful not to wait longer than your max timeout!
 
-## What Luft Balloon Does
+## Things Luft Balloon Does
 
 * Allows you to perform operations on the DOM from a running web browser.
 * Runs one test per page at a time, collecting results in HTML5 local storage as it goes.
@@ -124,11 +128,12 @@ luft.test("/", 'subscribe and unsubscribe', 3000, function(t){
 * Allows for multiple assertions and actions to be performed in a given test.
 * Reports directly in the browser on success/failure of tests.
 
-## What It Does Not Do
+## Things Luft Balloon Does Not Do
 
 * Provide any kind of setup/teardown functionallity.
 * Allow for integration tests to test multiple pages in a single test.
 * Integrate with a CI server (yet).
+* Support loading pages with HTTP verbs other than GET
 
 ## Isn't It Actually Spelled Luftballon?
 
@@ -136,5 +141,6 @@ Yes.
 
 ## Inspired By
 
-Helium Css.
+[helium]: https://github.com/geuis/helium-css
+[Helium Css][helium] 
 
