@@ -8,7 +8,7 @@ Luft Balloon allows you to write tests that run directly in your browser.  It re
 * [Basics](#basics)
 * [More Complex Examples](#more-complex-examples)
 * [Things Luft Balloon Does](#things-luft-balloon-does)
-* [Things Luft Baloon Does Not DO](#things-luft-balloon-does-not-do)
+* [Things Luft Baloon Does Not Do](#things-luft-balloon-does-not-do)
 
 ## Setup
 
@@ -141,6 +141,7 @@ As you can see, you can nest as many calls to t.after() as you need, just be car
 * Allow for integration type tests that test events across multiple pages in a single test.
 * Support loading pages with HTTP verbs other than GET
 * Integrate with a CI server (yet).
+* Provide a headless testing solution (but it may work with PhantomJS I haven't tried it).
 
 ## Isn't It Actually Spelled Luftballon?
 
