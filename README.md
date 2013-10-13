@@ -6,6 +6,9 @@ Luft Balloon allows you to write tests that run directly in your browser.  It re
 
 * [Setup](#setup)
 * [Basics](#basics)
+* [More Complex Examples](#more-complex-examples)
+* [Things Luft Balloon Does](#things-luft-balloon-does)
+* [Things Luft Baloon Does Not DO](#things-luft-balloon-does-not-do)
 
 ## Setup
 
