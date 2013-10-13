@@ -2,9 +2,12 @@
 [mrshow]: http://www.youtube.com/watch?v=c6BvdpR6V3g
 [You've got to follow your balloon!][mrshow]
 
-Luft Balloon allows you to write tests that run directly in your browser.
+Luft Balloon allows you to write tests that run directly in your browser.  It requires that you use jQuery.
 
-## Setup
+* [Setup](#setup)
+* [Basics](#basics)
+
+## Setup <a id="setup"></a>
 
 To run tests, you will need to put a script referrence to luft-balloon.js at the bottom of your body tag.
 
@@ -17,6 +20,7 @@ Followed by javascript that contains your test definitions.
 ``` javascript
 luft.test("/", 'product overlay open and close', 3000, function(t){
   t.assert_exists($('#redballoon'), 'critial element');
+  t.complete();
 });
 ```
 
@@ -28,7 +32,7 @@ $(document).ready(function(){
 });
 ```
 
-## Basics
+## Basics <a id="basics"></a>
 
 Javascript by nature is very asynchronous.  This presents some issues when immediately trying to assert some state after you have performed an action.  Luft Balloon's solution for this is to allow each test to specify timeouts for how long it should wait before performing subsequent steps in a test.
 
@@ -36,7 +40,7 @@ Javascript by nature is very asynchronous.  This presents some issues when immed
 
 This is used to define the scope of a single test.  You define the relative path for the browser to navigate to, give the test a meaningful name, specify the maximum time it should take to complete, and provide a function that contains the test logic.
 
-A simple test definition could simply assert a condition on a loaded page.
+A simple test definition could simply assert a condition on a loaded page:
 
 ``` javascript
 luft.test("/artists", 'renders 20 artists', 1000, function(t){
@@ -45,7 +49,7 @@ luft.test("/artists", 'renders 20 artists', 1000, function(t){
 });
 ```
 
-The above example will navigate the browser to '/artists'.  Then once the page load event fires, assert that there are 20 .artist elements on the page.  If the encapsulated logic takes longer than 1000ms (1 second) before calling t.complete(), the test will fail.  If the assert statement fails, this will also cause a failing state to be reported.
+The above example will navigate the browser to '/artists'.  Then once the page load event fires, assert that there are 20 '.artist' elements on the page.  If the encapsulated logic takes longer than 1000ms (1 second) before calling t.complete(), the test will fail.  If the assert statement fails, this will also cause a failing state to be reported.
 
 ### Trigger actions and wait with t.after()
 
@@ -57,18 +61,18 @@ luft.test("/products", 'ajax load more button', 2000, function(t){
   t.assert_exists(link, 'more link');
   t.assert_equal(10, $('.products').length);
   link.click(); // will not be called if prior asserts fail
-  t.after('more link clicked', 1000, function(){
+  t.after('more link clicked', 500, function(){
     t.assert_equal(20, $('.products').length);
     t.complete();
   });
 });
 ```
 
-In this example, we first perform a few asserts to ensure the link we want to click actualy exists, then after triggering the click event, we need to wait for some time (1s in this case) for the ajax events to fire and load more products into the page before we can perform additional assertions.
+In this example, we first perform a few asserts to ensure the link we want to click actualy exists, then after triggering the click event, we need to wait for some time (half a second in this case) for the ajax events to fire and load more products into the page before we can perform additional assertions.
 
 ### Be Careful With Timeouts And Waits
 
-Since the timeout passed to test() specifies the max time it should take for the test to complete, you never want your total after() wait times to exceed your max.  This is a recipe for a broken test!
+Since the timeout passed to test() specifies the max time it should take for the entire test to complete, you never want your total after() wait times to exceed your max.  This is a recipe for a broken test!
 
 ### Strings For Context
 
@@ -118,7 +122,7 @@ luft.test("/artists", 'subscribe and unsubscribe', 3000, function(t){
 });
 ```
 
-As you can see, you can next as many calls to t.after() as you need, just be careful not to wait longer than your max timeout!
+As you can see, you can nest as many calls to t.after() as you need, just be careful not to wait longer than your max timeout!
 
 ## Things Luft Balloon Does
 
@@ -130,10 +134,10 @@ As you can see, you can next as many calls to t.after() as you need, just be car
 
 ## Things Luft Balloon Does Not Do
 
-* Provide any kind of setup/teardown functionallity.
-* Allow for integration tests to test multiple pages in a single test.
-* Integrate with a CI server (yet).
+* Provide any kind of setup/teardown functionality.
+* Allow for integration type tests that test events across multiple pages in a single test.
 * Support loading pages with HTTP verbs other than GET
+* Integrate with a CI server (yet).
 
 ## Isn't It Actually Spelled Luftballon?
 
