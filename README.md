@@ -7,7 +7,7 @@ Luft Balloon allows you to write tests that run directly in your browser.  It re
 * [Setup](#setup)
 * [Basics](#basics)
 
-## Setup <a id="setup"></a>
+## Setup
 
 To run tests, you will need to put a script referrence to luft-balloon.js at the bottom of your body tag.
 
@@ -32,7 +32,7 @@ $(document).ready(function(){
 });
 ```
 
-## Basics <a id="basics"></a>
+## Basics
 
 Javascript by nature is very asynchronous.  This presents some issues when immediately trying to assert some state after you have performed an action.  Luft Balloon's solution for this is to allow each test to specify timeouts for how long it should wait before performing subsequent steps in a test.
 
