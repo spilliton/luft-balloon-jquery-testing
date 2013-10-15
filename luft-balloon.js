@@ -50,7 +50,7 @@ var luft = (function($, document) {
 
   // Public Methods =======================================
 
-  var init = function(){
+  function init(){
     // Callback on init or default to running the report.
     callback = (arguments.length > 0) ? arguments[0] : report;
     //silently fail if localStorage is not available
@@ -62,96 +62,98 @@ var luft = (function($, document) {
     }else{
       throw new Error('localStorage API not found');
     }
-  };
+  }
 
   // registers a test
-  var test = function(path, test_name, timeout, func){
-    allTests.push({'path': path, 'name': test_name, 'func': func, 'timeout': timeout});
-  };
-
-  var reset = function(){
-    //resets to beginning
-    localStorage.removeItem('luftData');
-    $('#luftID').remove();
-    clear();
-    init();
-  };
+  function test(path, tesName, timeout, func){
+    if(typeof timeout !== "number"){
+      throw "3rd param of test() must be a number!  Test: "+tesName+" uri: "+path; 
+    }
+    allTests.push({'path': path, 'name': tesName, 'func': func, 'timeout': timeout});
+  }
 
   // Public assertion methods ===================================
 
   // Since only one test is run per page load this context
   // is also used once per page load
-  var helpers = {
-    after: function(text, timeout, func){
-      if(currentTestError){throw currentTestError;}
-      textContexts.push(text);
-      if(typeof func === 'function'){
-        setTimeout(function(){
-          try{
-            func();
-          }catch(err){
-            currentTestError = err;
-          }
+  
+  function after(text, timeout, func){
+    if(currentTestError){throw currentTestError;}
+    textContexts.push(text);
+    if(typeof func === 'function'){
+      setTimeout(function(){
+        try{
+          func();
+        }catch(err){
+          currentTestError = err;
         }
-        ,timeout);
-      }else{
-        throw "after() expects function as second param";
-      }
-    },
-    assert: function(val, fail_msg){
-      if(currentTestError){throw currentTestError;}
-      totalAssertCount += 1;
-      if(val){
-        passedAssertCount += 1;
-      }else{
-        throw fail_msg;
-      }
-    },
-    assert_exists: function(elem, elem_name){
-      helpers.assert(($(elem).length > 0), elem_name+' did not exist on page!');
-    },
-    assert_visible: function(elem, elem_name){
-      helpers.assert($(elem).is(":visible"), elem_name+' was not visible!');
-    },
-    assert_hidden: function(elem, elem_name){
-      helpers.assert(!$(elem).is(":visible"), elem_name+' was not hidden!');
-    },
-    assert_equal: function(expected, actual){
-      helpers.assert((expected === actual), 'expected "'+expected+'" but was "'+actual+'"');
-    },
-    complete: function(){
-      currentTestCompleted = true;
+      }, timeout);
+    }else{
+      throw "after() expects function as second param";
     }
+  }
+  function assert(val, fail_msg){
+    if(currentTestError){throw currentTestError;}
+    totalAssertCount += 1;
+    if(val){
+      passedAssertCount += 1;
+    }else{
+      throw fail_msg;
+    }
+  }
+  function assert_exists(elem, elem_name){
+    assert(($(elem).length > 0), elem_name+' did not exist on page!');
+  }
+  function assert_visible(elem, elem_name){
+    assert($(elem).is(":visible"), elem_name+' was not visible!');
+  }
+  function assert_hidden(elem, elem_name){
+    assert(!$(elem).is(":visible"), elem_name+' was not hidden!');
+  }
+  function assert_equal(expected, actual){
+    assert((expected === actual), 'expected "'+expected+'" but was "'+actual+'"');
+  }
+  function complete(){
+    currentTestCompleted = true;
+  }
+  
+  var helpers = {
+    after: after,
+    assert: assert,
+    assert_exists: assert_exists,
+    assert_visible: assert_visible,
+    assert_hidden: assert_hidden,
+    assert_equal: assert_equal,
+    complete: complete
   };
-
 
   // Private methods =======================================
 
-  var checkstatus = function(){
+  function checkstatus(){
     //determine state
     //0: not started
     //1: looping through pages, running tests
     //2: finished, show report
-    if(typeof data.status === 'undefined'){
+    if ( typeof data.status === 'undefined' ) {
       data.status = 0;
     }
     // render 
-    if( data.status === 0 ){
+    if ( data.status === 0 ) {
       renderStart();
       return false;
     }
     // loop through pages running tests
-    if( data.status === 1 ){
+    if ( data.status === 1 ) {
       runTests();
       return false;
     }
     //Finished, issue report
-    if( data.status === 2 ){
+    if ( data.status === 2 ) {
       callback();
     }
-  };
+  }
   
-  var renderStart = function(){
+  function renderStart(){
     var total = allTests.length.toString();
     var html = [
         '<h1>Run '+total+' Luft Tests</h1>',
@@ -171,14 +173,9 @@ var luft = (function($, document) {
     //add listener to save list and start processing
     $('#testStart').on('click', startTests);
     $('#testHide').on('click', hide);
-  };
+  }
 
-  var restart = function(){
-    reset();
-    startTests();
-  };
-
-  var startTests = function(){
+  function startTests(){
     data.status = 1;
     data.currentTestIndex = 0;
     data.totalAssertCount = 0;
@@ -186,14 +183,21 @@ var luft = (function($, document) {
     data.errors = [];
     save();
     nav();
-  };
+  }
+
+  //resets to beginning
+  function reset(){
+    $('#luftID').remove();
+    clear();
+    init();
+  }
 
   var hide = function(){
     $('#luftID').hide();
-  };
+  }
 
   //display final report
-  var report = function(){
+  function report(){
     var html = [
       '<h1>Tests Complete!</h1>',
       '<input type="button" id="luftRestart" value="Reset Tests"/>',
@@ -204,7 +208,7 @@ var luft = (function($, document) {
 
     var passed = data.passedAssertCount.toString();
     var total = data.totalAssertCount.toString();
-    html.push('<h2>'+"Passed "+passed+' out of '+total+" assertions."+'</h2>');
+    html.push('<h2>'+"Passed "+passed+' out of '+total+" tested assertions."+'</h2>');
     pushErrorsTo(html);
 
     var div = document.createElement('div');
@@ -215,33 +219,35 @@ var luft = (function($, document) {
     $('body')[0].appendChild(div);
 
     //add listener to reset all data
-    $('#luftRestart').on('click', restart);
+    $('#luftRestart').on('click', reset);
     $('#testHide').on('click', hide);
-  };
+  }
 
-  var pushErrorsTo = function(html){
-    if(data.errors.length == 0){return true;}
+  function pushErrorsTo(html){
+    var errorCount = data.errors.length;
+    if ( errorCount == 0 ) { return true; }
+    html.push('<h2>'+errorCount+' test(s) out of '+allTests.length+' had errors.</h2>')
     html.push('<ul class="cell">');
-    for(var i=0;i<data.errors.length;i++){
+    for ( var i=0; i<data.errors.length; i++ ){
       var classname = '';
-      if(i%2==0){
+      if ( i%2 == 0 ){
         classname = ' class="alternate"';
       }
       var str = errorToString(data.errors[i]);
       html.push('<li'+classname+'>'+str+'</li>')
     }
     html.push('</ul>'); 
-  };
+  }
 
-  var errorToString = function(error){
-    var test = "Test: "+error.test_name+' on page '+error.path;
+  function errorToString(error){
+    var test = "Test: "+error.testName+' on page '+error.path;
     var contexts = "After: "+error.contexts.join(' -> ');
     var failure = "Failed: "+error.msg;
     var msg = [test, contexts, failure].join('<br/>');
     return msg;
-  };
+  }
 
-  var generateCSS = function(){
+  function generateCSS(){
     var css = [
       '#luftID{',
         'font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;',
@@ -344,20 +350,20 @@ var luft = (function($, document) {
     style.innerHTML = css.join('');
 
     $('body')[0].appendChild( style );
-  };
+  }
 
   // run relevant tests on the page
   // page already loaded at this point
-  var runTests = function(){
+  function runTests(){
     var test = currentTest();
     var error = {
       path: test.path,
-      test_name: test.name
+      testName: test.name
     };
 
     try{
       test.func(helpers);
-    }catch(err){
+    } catch ( err ) {
       error.msg = err;
       error.contexts = textContexts;
       addError(error);
@@ -367,95 +373,73 @@ var luft = (function($, document) {
     // if no initial errors, test eventually times out
     setTimeout(function(){
       error.contexts = textContexts;
-      if(currentTestError){
+      if ( currentTestError ) {
         error.msg = currentTestError;
         addError(error);
-      }else if(!currentTestCompleted){
+      }else if ( !currentTestCompleted ) {
         error.msg = "Did not complete in time!";
         addError(error);
       }
       advanceTests();
     }, test.timeout); 
+  }
 
-  };
-
-  var currentTest = function(){
+  function currentTest(){
     var i = data.currentTestIndex;
     return allTests[i];
-  };
+  }
 
   // Returns true if there is a valid next test
-  var advanceTests = function(){
-    if(!advancing){
+  function advanceTests(){
+    if ( !advancing ) {
       advancing = true;
       data.totalAssertCount += totalAssertCount;
       data.passedAssertCount += passedAssertCount;
       data.currentTestIndex += 1;
       save();    
       var should_advance = data.currentTestIndex < allTests.length;
-      if(should_advance){
+      if ( should_advance ) {
         nav();
-      }else{
+      } else {
         data.status = 2;
         save();
         callback();
       }
     }
-  };
+  }
 
   //navigate to next page in list
-  var nav = function(){
+  function nav(){
     var path = currentTest().path;
     window.location = path;
-  };
-
-
+  }
   
-  var addError = function(msg){
-    if(!errorLogged){
+  function addError(msg){
+    if ( !errorLogged ) {
       errorLogged = true;
       data.errors.push(msg);
       save();
     }
-  };
+  }
 
-
-  var load = function(){
-    if(!localStorage.luftData){
+  function load(){
+    if ( !localStorage['luftData'] ) {
       localStorage.luftData = JSON.stringify({});
     }
     data = JSON.parse( localStorage.luftData );
-  };
+  }
 
-
-  var save = function(){
+  function save(){
     localStorage.luftData = JSON.stringify( data );
-  };
+  }
 
-  var clear = function() {
-    delete localStorage['luftData'];
-  };
-
-  var get = function(url, index, callback){
-    if(window.attachEvent){
-      var http = new ActiveXObject("Microsoft.XMLHTTP");
-    }else{
-      var http = new XMLHttpRequest();
-    }
-    http.open("GET", url);
-    http.onreadystatechange=function() {
-      if(http.readyState === 4) {
-        callback(index, http.responseText);
-      }
-    }
-    http.send(null);
-  };
+  function clear() {
+    localStorage.removeItem('luftData');
+  }
 
   return {
     init: init,
-    test: test,
-    reset: reset, 
-    helpers: helpers
+    test: test
   };
 
 })(jQuery, document);
