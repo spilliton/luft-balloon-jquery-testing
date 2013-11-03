@@ -1,4 +1,7 @@
 # Luft Balloon jQuery Testing Framework
+
+[![Code Climate](https://codeclimate.com/github/spilliton/luft-balloon-jquery-testing.png)](https://codeclimate.com/github/spilliton/luft-balloon-jquery-testing)
+
 [mrshow]: http://www.youtube.com/watch?v=c6BvdpR6V3g
 [You've got to follow your balloon!][mrshow]
 
